@@ -1,0 +1,56 @@
+@document.meta
+title: README
+description: 
+authors: dfg
+categories: 
+created: 2025-12-22T21:48:23+0530
+updated: 2025-12-22T22:35:23+0530
+version: 1.1.1
+@end
+
+* Hi there future me!!
+  It is 22nd of Dec in the year of 2025 AD,
+  I have started a giagantic task of making a computer system on my own, 
+  ofcourse I have the internet to help me, But There are some rules for this project.
+
+** Rules
+   1. No use of LLMs or AI-agents.
+   2. Every line of code has to have a purpose, No place for dead code.
+   3. Keep amount code to a minimum.
+
+* Goals
+  The primary goal for this project is to make a RISC-V computer that can run 1993 DOOM on it.
+  I have decided to devide this project into 3 steps
+
+  1. The Emulator
+  2. The Kernel
+  3. The shell
+  4. DOOM
+
+** IronClad (The Emulator)
+   - *_Goal_*: A cycle-accurate (or near-accurate) RV32I executor.
+   - *_The Outcome_*: The emulator loads a .bin file into virtual RAM, points the PC (Program Counter) to the start,
+     and executes instructions until it hits a HALT signal.
+   - *_Success Metric_*: You can run a "Prime Number Generator" written in Assembly/C
+     and see the correct result in the virtual registers or printed to your terminal via a virtual UART.
+
+** Rusty Iron Kernel
+  - *_Goal_*: A "Supervisor" that manages hardware resources.
+  - *_The OutCome_*: The kernel boots, sets up the Trap Vector Table (to handle errors),
+    and initializes a Heap Allocator (so you can use Vec, Box, etc. in Rust).
+  - *_Success Metric_*: The kernel can successfully handle a "Timer Interrupt"—meaning it can keep track
+    of time and switch between two different "tasks" (Multitasking).
+
+** Iron Shell (ish)
+  - *_Goal_*: An interactive command-line interface running in "User Mode."
+  - *_The Outcome_*: A prompt appears in your terminal. It listens for keyboard input, parses strings,
+    and triggers System Calls to the Kernel.
+  - *_Success Metric_*: Typing help shows a list of commands, and typing exec <program> loads a separate binary
+    from "disk" into memory and runs it.
+
+** Iron DOOM
+  - *_Goal_*: The ultimate validation of the Iron-Stack.
+  - *_The Outcome_*: The IronClad emulator provides a Framebuffer (a window on your Arch Linux desktop).
+    RustyIron provides the memory and file-reading hooks.
+  - *_Success Metric_*: Seeing the DOOM title screen render at a playable frame rate
+    with keyboard input mapped to the emulator's virtual input device.
