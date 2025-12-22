@@ -29,8 +29,7 @@ version: 1.1.1
 
 ** IronClad (The Emulator)
    - *_Goal_*: A cycle-accurate (or near-accurate) RV32I executor.
-   - *_The Outcome_*: The emulator loads a .bin file into virtual RAM, points the PC (Program Counter) to the start,
-     and executes instructions until it hits a HALT signal.
+   - *_The Outcome_*: The emulator loads a .bin file into virtual RAM, points the PC (Program Counter) to the start.
    - *_Success Metric_*: You can run a "Prime Number Generator" written in Assembly/C
      and see the correct result in the virtual registers or printed to your terminal via a virtual UART.
 

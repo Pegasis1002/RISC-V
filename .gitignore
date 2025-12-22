@@ -1,0 +1,11 @@
+# Neovim / Neorg
+*.tmp
+*.bak
+.netrwhist
+
+# Rust / Cargo (for future use)
+target/
+**/*.rs.bk
+
+# System / Arch
+.DS_Store
