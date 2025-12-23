@@ -1,0 +1,58 @@
+@document.meta
+title: {TODAY_DATE} - RISC-V Dev Dump
+description: Informal logs and register-level troubleshooting
+authors: {USER}
+categories: [dev-log, riscv, low-level]
+created: {TODAY_DATE}
+updated: {TODAY_DATE}
+version: 1.1.1
+@end
+
+* Daily Objective
+  - ( ) Research on RISC-V architecture.
+
+---
+
+* The Brain Dump
+I am starting my research on the RISC-V architecture today, excited to get into this.
+RISC stands for Reduced instruction set computer, The reduce does not mean that, instructinos
+are eleminated from the set, quite the opposite actually, It just states that individual instructions
+in the set are simplified. The amount of work any single instruction accomplishes is reduces.
+example -- at most a single data memory cycle, compared to complex instructions from CISC CPUs that
+require dozens of data memory cycles in order to execute a single instruction.
+
+I have pulled up the RISC-V specs, It is by researchers at University of California.
+That document contains a lot of stuff but I am interested in the second chptr,
+RV32I Base instruction set, V 2.1
+This is 32-bit I think, which is easier than 64-bit, I think there is 128-bit also but not sure.
+
+Just like the chip8 we here have to implement a fetch-decode-execute flow. But the catch is
+that the instruction set is bigger(I think) and there are more components that need to talk to each other
+at a faster rate.
+
+A core is a component that contains an independent instruction fetch unit.
+A RISC-V-compatible core might support multiple RISC-V-compatible hardware threads.
+We can have multiple cores.
+
+An /accelerator/ is refered to either a non-programmable fixed-function unit or a core that 
+can operate autonomously but is specialized in doing a perticular task. A greate example is 
+I/O accelerators, these offload I/O processing tasks from the main application cores.
+
+
+
+* Technical Snags & Logic
+  - *Symptom:* - *Suspected Cause:* - *Current Register State / Code Snippet:*
+    @code asm
+    # Paste relevant RISC-V assembly or Rust code here
+    addi x1, x0, 10
+    @end
+
+* 🐇 Rabbit Holes
+  - {Link to specific PDF pages of the RISC-V spec or forum threads here}
+  - [ ] Need to research: 
+
+* End of Session Reflection
+  - *What works:*
+  - *What's broken:*
+  - *Next logical step:*
+
