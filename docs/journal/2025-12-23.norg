@@ -38,6 +38,11 @@ An /accelerator/ is refered to either a non-programmable fixed-function unit or 
 can operate autonomously but is specialized in doing a perticular task. A greate example is 
 I/O accelerators, these offload I/O processing tasks from the main application cores.
 
+  A Hart or Harware Thread is the smallest unit of execution. Each hart has its own set of 32 register,
+  and a program counter(PC).
+  A core can contain a single or multiple harts.
+
+  For this project We should stick to single singlethreaded operation, as most DOOM engines are singlethreaded.
 
 
 * Technical Snags & Logic
