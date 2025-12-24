@@ -1,0 +1,45 @@
+@document.meta
+title: {TODAY_DATE} - RISC-V Dev Dump
+description: Informal logs and register-level troubleshooting
+authors: {USER}
+categories: [dev-log, riscv, low-level]
+created: {TODAY_DATE}
+updated: {TODAY_DATE}
+version: 1.1.1
+@end
+
+* Daily Objective
+  - ( ) {What is the one thing we're trying to make work today?}
+
+---
+
+* The Brain Dump
+  > Just flow here. No formatting rules. 
+  
+  $ {Input thoughts, weird behaviors, or "why is this register not zero?" moments here.}
+
+* Technical Snags & Logic
+  - *Symptom:* - *Suspected Cause:* - *Current Register State / Code Snippet:*
+    @code asm
+    # Paste relevant RISC-V assembly or Rust code here
+    addi x1, x0, 10
+    @end
+
+* 🐇 Rabbit Holes
+  - {Link to specific PDF pages of the RISC-V spec or forum threads here}
+  - [ ] Need to research: 
+
+* End of Session Reflection
+  - *What works:*
+  - *What's broken:*
+  - *Next logical step:*
+@document.meta
+title: 2025-12-24
+description: 
+authors: dfg
+categories: 
+created: 2025-12-24T21:27:45+0530
+updated: 2025-12-24T21:27:45+0530
+version: 1.1.1
+@end
+
