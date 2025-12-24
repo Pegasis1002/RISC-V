@@ -9,37 +9,90 @@ version: 1.1.1
 @end
 
 * Daily Objective
-  - ( ) {What is the one thing we're trying to make work today?}
+  - (-) Understand the base integer ISA
+  - (?) RV32I ISA
 
 ---
 
 * The Brain Dump
-  > Just flow here. No formatting rules. 
-  
-  $ {Input thoughts, weird behaviors, or "why is this register not zero?" moments here.}
+  I have to first understand what the thinking behind the RISC-V ISA.
+  We are going to be using the RV32I, a base integer instruction set of RISC-V ISA.
+  It uses 2's compliment representation for signed integer values.
+
+  A RISC-V hart has a single byte-addressable address space of (2)^XLEN bytes for all memory accesses.
+  - /word/ of memory = 32-bits (4 bytes)
+  - /halfword/ of memory = 16-bits (2 bytes)
+  - /doubleword/ of memory = 64-bits (8 bytes)
+
+  What a word of memory actually is:
+  - 4 byte chunck of memory.
+  - 1 instruction is 32 bit wide, hence 1 word can store 1 instruction.
+
+  Since each instruction is 4 bytes and our memory is segmented into 1 byte chunks we have
+  to get creative with fetching instructions, get 4 bytes from memory, combine them to form the instruction.
+  We might not even need to combine them as in chip8 I had to saperate the instruction into 4 bit chunchs
+  for processing anyways, so we may not even need to do the combination.
+
+  Each time we need to proceed the execution we just have to increament the PC by 4, just like in chip8
+  we increamented PC by 2.
+
+  1 instruction is 32 bits wide,
+  it can be anywhere from 0x00000000 to 0xFFFFFFFF for usigned int.
+  I dont imagine us needing signed int for memory as there is nothing as negative memory(At least to my knowladge).
+  Each byte of the instruction has its own memory address.
+
+
+  I think We should do the same as we did with chip8 memory and make an array 128 MB wide, But we
+  should try to actually imitate the hardware, it will be more structured and benifitial in the long run.
+
+  Our emulator is gonna have 2 parts to it, for now.
+  - CPU
+  - Bus
+
+  Both are defined as structs, the fetch-decode-exec logic and interface/memory logic respectively.
+
+  My job tomorrow is to make a spec for the sofware reprentation of the Hardware.
+  I will be signing off now and work on this first thing in the morning.
+  I have writen the basic structure of how the code should be represented, But I will have to make this
+  modular so I will make a spec describing the project structure, one file one operation.
+  To make a more granular statement about the structure, it is one file can have at most one public function.
+  If a helper function is being used multiple times, it should usualy be abstracted to a utility module,
+  even a seprate crate if there are a ton of these util funtions. This will make it easier to keep track and
+  maintain the system long term.
+  I feel like having this rigid structure will keep this project clean and cluter free.
+
+
+  I will now sign off and continue to work on this in the morning.
+
 
 * Technical Snags & Logic
-  - *Symptom:* - *Suspected Cause:* - *Current Register State / Code Snippet:*
-    @code asm
-    # Paste relevant RISC-V assembly or Rust code here
-    addi x1, x0, 10
+*** CPU
+    @code rust
+    // Struct for the CPU
+    struct CPU {
+      pc: u32,
+      reg: [u32; 32],
+      bus: Bus,
+    }
+
+    // Methods for the fetch-decode-exec cycle
+    impl CPU {
+      fn cycle(&mut self, op: MemoryCode){
+        // Logic for the cycle
+      }
+    }
+
+    // Struct for the memory and storage interfaces.
+    struct Bus {
+      ram: Vec<u8>,
+      // More stuff like virtual disk, USB, etc here.
+    }
+
+    // Methods for read and write operation to memory.
+    impl Bus {
+      fn read(&self, addr: u32) {
+        // logic to identify and read from memory( ram of otherwise ).
+      }
+    }
     @end
-
-* 🐇 Rabbit Holes
-  - {Link to specific PDF pages of the RISC-V spec or forum threads here}
-  - [ ] Need to research: 
-
-* End of Session Reflection
-  - *What works:*
-  - *What's broken:*
-  - *Next logical step:*
-@document.meta
-title: 2025-12-24
-description: 
-authors: dfg
-categories: 
-created: 2025-12-24T21:27:45+0530
-updated: 2025-12-24T21:27:45+0530
-version: 1.1.1
-@end
 
