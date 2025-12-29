@@ -1,0 +1,35 @@
+@document.meta
+title: {TODAY_DATE} - RISC-V Dev Dump
+description: Informal logs and register-level troubleshooting
+authors: {USER}
+categories: [dev-log, riscv, low-level]
+created: {TODAY_DATE}
+updated: {TODAY_DATE}
+version: 1.1.1
+@end
+
+* Daily Objective
+  - (-) Decoding Logic
+
+* The Brain Dump
+  Today I will start on the decoding logic.
+  We need a funtion for that, I will put it into the cpu module.
+
+  should it be pub or private?
+  Will It be used outside the cpu module? 
+  i guess not, so I will make it into a helper function
+
+  We are going to return a struct containing all the decoded compenents of the instruction.
+
+  The points to focus on while reading the RV#@I manual:
+  - Bit Ranges
+  - The 6 Formats
+  - Sign Extension
+
+
+
+* End of Session Reflection
+  - *What works:*
+  - *What's broken:*
+  - *Next logical step:*
+

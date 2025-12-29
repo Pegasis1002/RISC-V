@@ -1,0 +1,150 @@
+@document.meta
+title: {TODAY_DATE} - RISC-V Dev Dump
+description: Informal logs and register-level troubleshooting
+authors: {USER}
+categories: [dev-log, riscv, low-level]
+created: {TODAY_DATE}
+updated: {TODAY_DATE}
+version: 1.1.1
+@end
+
+* Daily Objective
+  - (-) Complete struct for CPU
+
+---
+
+* The Brain Dump
+  I now have to make the struct for CPU, i have already made the bus.
+  I have also defined the struct  before.
+  @code rust
+  pub struct CPU {
+    pc: u32,
+    reg: [u32; 32],
+    bus: BUS,
+  }
+
+  impl CPU {
+    pub fn new(bus: BUS) -> Self {
+      return Self {
+        pc: 0x8000_0000,// change this to the loc where the kernel starts
+        reg: [0; 32],
+        bus,
+      }
+    }
+  }
+  @end
+
+
+  In implementing this, cargo cant find the new() function that I implemented in the cpu::mod.rs file.
+  I just missed a simple mod cpu; in the main.rs
+
+  I have to make the fields public, so that they are accessable in the crate only.
+
+  The cpu is being properly initialized.
+  Now the next step is we need a step funtion, the purpose for this is to proceed the execution of instructions
+  This is the same as when we defined a cycle in chip8, but the key difference is that we are using a more
+  structured function this time around.
+
+
+  What will the step function do?
+  The step funtion will do 1 cycle of the fetch->decode->exec loop.
+  I will now define a loop in the main function that loops forever,
+  put a cpu.step() function inside it.
+
+  @code rust
+  loop {
+    cpu.step()
+    // A way to break if needed.
+  }
+  @end
+
+  In the step funtion we define the fetch -> decode -> exec logic.
+  the first step is to fetch the OpCode from memory, for that we need a read from bus function.
+  so I will now make a method for bus in the ram.rs file, 
+  it should read 4 bytes from the  ram, then we combine them together.
+
+
+  so we get 4 u8 from the ram starting from the given address.
+  we also need to know how the instructions are stored in memory.
+  in Little Endian the least significant byte is stored first in memory
+  meaning if 0x12345678 is to be stored in an array it will be like this
+
+  @code
+    [0x78, 0x56, 0x34, 0x12]
+  @end
+
+  we need to combine the 4 bytes into a singular u32,
+  for this we have to perform bitwise operation on the fetched bytes
+
+  @code rust 
+  pub fn read_word(&self, addr: u32) -> u32 {
+    // read 4 bytes from ram
+    let addr = addr as usize;
+    let b0 = self.ram[addr] as u32;
+    let b1 = self.ram[addr + 1] as u32;
+    let b2 = self.ram[addr + 2] as u32;
+    let b3 = self.ram[addr + 3] as u32;
+    //combine them together and return the result
+    return (b3 << 24) | (b2 << 16) | (b1 << 8) | b0
+  }
+  @end
+
+  first we take the least significant byte of the bunch, shift it left by 3 bytes so 24 bits
+  the result in our litle example will be as follows
+  @code 
+    0x7800_0000
+  @end
+  then we take the more significant bit after this shift it by 2 byte or 16 bit,
+  and then perform bitwise OR the risult of the previous operation
+  @code
+    0x0056_0000
+  <-----OR------>
+    0x7800_0000
+  <------------->
+    0x7856_0000
+    
+  @end
+  We repeat this step with the incresingly significant bytes,
+  in the end we get the full instruction.
+  @code
+  0x78563412
+  @end
+
+  Notice that the bytes are reversed and not the bits.
+
+  Now for the spec I am thinking of writing the spec for this inside the ram section of bus spec.
+  I have implemented the read funtion into the bus module.
+  Now I have the fetch of the cycle.
+  I will integrate that imidietly into the cpu modules step function which is yet to be defined.
+
+  For now I will implement a simple definite loop and inside that I will call the step functino from cpu module.
+  @code rust
+  let cc = 0;
+  while cc <= 15 {
+    CPU::step();
+    cc += 1;
+  }
+  @end
+
+  Making a infinite loop will make debugging harder, so for now we just perform operations on first 16 instructions.
+  Now for the step funtion I think we do this:
+
+  @code rust
+  impl CPU {
+    pub(crate) fn step(&self) {
+      // Fetch the instruction at Program counter
+      let op_code = BUS::read_word(self.pc);
+
+      // Decode and Exec 
+
+      // Increament Program counter
+      self.pc += 4;
+    }
+  }
+  @end
+
+* End of Session Reflection
+  - *What works:*
+  - *What's broken:*
+  - *Next logical step:*
+

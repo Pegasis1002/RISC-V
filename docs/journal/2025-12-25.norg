@@ -20,18 +20,48 @@ version: 1.1.1
   from the proccessors.
   So first How should I structure the files in rust?
 
-  @code bash
+  @code bash 
   .
   |_src
   | |_cpu
   | | |_mod.rs
   | |_bus
+  | | |_mod.rs
+  | | |_ram.rs
+  | |_models
   |   |_mod.rs
-  |   |_ram.rs
+  |   |_cpu.rs
   |_Cargo.toml
   |_main.rs
   @end
+
   This is the best way to deal with this I think.
+  I think that I should make a saperate module for structs and enums.
+  so make a directory for models.
+
+
+  I have defined the rules and the file structure in a spec, Now I should decide on the CPU struct and make a spec for that
+  since I am planing on have a field of cpu being a struct, we should define the bus first.
+
+
+  I am thinking that making a bus that communicates between all the interfaces and the cpu is a good idea.
+  the struct for the should for now include at least the Memory. I had defined memory as a just array of u8s
+  in the chip8 project, We can do the same here, but We dont actually need 4 GB of ram, we can do everything in
+  about 128 MB of ram.
+
+*** CPU structure and implementation
+    @code rust
+    pub struct cpu {
+      pc: u32,
+      reg: [u32, 32],
+      bus: bus,
+    }
+
+    impl cpu {
+      pub 
+    }
+    @end
+
 
 * Technical Snags & Logic
   - *Symptom:* - *Suspected Cause:* - *Current Register State / Code Snippet:*

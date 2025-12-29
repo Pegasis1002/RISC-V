@@ -1,0 +1,102 @@
+@document.meta
+title: {TODAY_DATE} - RISC-V Dev Dump
+description: Informal logs and register-level troubleshooting
+authors: {USER}
+categories: [dev-log, riscv, low-level]
+created: {TODAY_DATE}
+updated: {TODAY_DATE}
+version: 1.1.1
+@end
+
+* Daily Objective
+  - (x) Fix the out of bounds error for step funtion.
+  - (x) Write a loader function to load binary into memory.
+  - (_) Start with decoding logic.
+
+---
+
+* The Brain Dump
+  The first problem for us today is that when the emulator is run, it gives of this error:
+
+  @code Error
+  thread 'main' (5847) panicked at src/bus/ram/read_word.rs:7:26:
+  index out of bounds: the len is 134217728 but the index is 2147483648
+  @end
+
+  What is happening here?
+  So from my understanding when we are calling the step function, we are passing the program counter to it.
+  the step funtion is using the pc to access memory at address 'pc' which if you remember is initialized to
+  0x8000_0000 in the CPU::new() funtion.
+  (0x8000_0000)16 = (2048 * 1024 * 1024)10
+  this is exactly 2GB, so the cpu is telling the bus to look at the 2 GB mark in ram.
+  but as we are seting a hard limit to the ram, which is 128 MB, the pc is initialized out side the bounds.
+
+  The fix to this is to subtract 0x8000_0000 from the pc when reading from memory.
+
+  @code rusts
+  pub fn read_word(&self, addr: u32) -> u32 {
+    let pc = (addr - 0x8000_0000) as usize;
+
+    // Fetch the byte and combine them.
+    // ...
+    //return the word here
+    return word;
+  }
+  @end
+
+  I just tested this and it works!!
+  The CPU talks to the bus and to the ram!
+  Now the next step is to make a byte loader funtion.
+
+  We will make the function into the bus module, it will take 1 argument for file path.
+
+  @code rust
+  pub fn load_bin(&mut self, path: &str) -> std::io::Result<()> {
+    let mut file = std::fs::File::open(path)?;
+
+    let bytes_read = file.read(&mut self.ram)?;
+
+    println!("INFO: Loaded {} bytes from {} into RAM.", bytes_read, path);
+    Ok(())
+  }
+  @end
+
+  Here we are taking the path, fetching the file from the filesystem,
+  reading it into self.ram strating at 0, which is 0x8000_0000 in the address space.
+
+  Now we need to get the file path from the user via arguments
+
+  @code rust 
+  fn main(){
+    // Collect the arguments
+    let args: Vec<String> = std::env::args().collect();
+
+    if args.len() < 2 {
+      println!("Usage: iron_clad <path_to_binary>");
+      return;
+    }
+    // Get the path from args
+    let bin_path = &args[1];
+
+    // Init bus
+    let mut bus = BUS::new();
+
+    // Load the binary into ram via load_bin function
+    if let Err(e) = bus.load_binary(bin_path) {
+      eprintln!("Failed to load binary '{}': {}", bin_path, e);
+      return;
+    }
+
+    // Other stuff like initialization of cpu;
+  }
+  @end
+
+  This is exactly the same as with chip8, I am getting good at this.
+
+  Now the next step for us it the decode step of the cycle.
+
+* End of Session Reflection
+  - *What works:*
+  - *What's broken:*
+  - *Next logical step:*
+
