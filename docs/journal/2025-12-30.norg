@@ -1,0 +1,165 @@
+@document.meta
+title: 2025-12-30
+description: 
+authors: dfg
+categories: 
+created: 2025-12-30T21:00:05+0530
+updated: 2025-12-30T22:09:34+0530
+version: 1.1.1
+@end
+
+* Today's Goals
+  - (-) Start decoding
+
+* Thougth Dump
+  Today I have not spent any time thinking about this project,
+  But Now I will start working on the decoding logic.
+
+  The first thing is I should research acbout how the RV32I base instruction is structured
+  then I will have to divide the instructions into the sub parts to decode the isntruction.
+  I think that making a struct for this is the right approach, the decode function takes
+  in a u32(the instruction) and returns struct(containing the instruction parts).
+
+  I am reading through the RV32I programmers Model for Base Integer ISA from manual
+  it states the following
+  - 32 x registers each 32-bits wide
+  - x0 is always equal to zero
+  - x1 - x31 hold values that various instruction interprit as boolean or two's compliment signed binary.
+  - There is 1 more unprivilaged register, The Program Counter. (Already implemented)
+
+  This probably for programmer that are writing apps for risc-v but we can construct a good model from this.
+
+  A instruction has a lot of parts to it, some are common and others are special.
+  - opcode: this is common for all formats, 7 bits wide, starts from 0 to 6-bits.
+  - rd: I think it is destination register, where the result of operation is stored.
+  - funct3: idk
+  - rs are source registers I think, so the oprands of a operation.
+  - 
+
+  The registers are always at the same position regardless of format.
+
+  Formats are as follows:
+  @table
+  |--------+-----------------------------------+--------------------------------------------------|
+  | Format | Purpose                           | Key Fields                                       |
+  |--------+-----------------------------------+--------------------------------------------------|
+  | R-type | Register-to-Register operations   | "opcode, rd, funct3, rs1, rs2, funct7 "          |
+  |--------+-----------------------------------+--------------------------------------------------|
+  | I-type | Immediate/Load operations         | "opcode, rd, funct3, rs1, imm[11:0] "            |
+  |--------+-----------------------------------+--------------------------------------------------|
+  | S-type | Store operations                  | "opcode, imm[11:5], rs2, rs1, funct3, imm[4:0] " |
+  |--------+-----------------------------------+--------------------------------------------------|
+  | B-type | Conditional Branches              | "opcode, imm (split), rs2, rs1, funct3 +1"       |
+  |--------+-----------------------------------+--------------------------------------------------|
+  | U-type | Upper Immediate (Large constants) | "opcode, rd, imm[31:12] +2"                      |
+  |--------+-----------------------------------+--------------------------------------------------|
+  | J-type | Unconditional Jumps               | "opcode, rd, imm[20:1] +1"                       |
+  |--------+-----------------------------------+--------------------------------------------------|
+  @end
+
+  So we should make a struct named decoded_instruction, which will have all there Fields.
+
+  To understand what the instruction is saying is the purpose of this module.
+  The first step is to extract the opcode, This opcode tells us the category of the instruction.
+
+  For example let us take the instruction 0x00500093
+  The first 7 bits of this instruction are the opcode.
+  So we write the first byte in binary, we get
+
+  10010011
+
+  The first 7 bits are 0010011 converting them to hex we get 0x13 This the opcode
+  in code we can use masking to get this
+
+  @code rust
+  let instruction = 0x00500093;
+  let opccode = istruction & 0x7F; // 0x7 is binary 01111111 (7-bits)
+  @end
+
+  This will give us the opcode.
+
+  The next is the destination register,
+  It can be done by right shifting the instruction by 7 bits, this will cull out the opcode.
+  then masking with 0x1F, this will get us the the first 5 bits.
+
+  @code rust
+  let instruction = 0x00500093;
+  let rd = (istruction >> 7) & 0x1F; // 0x1F is binary 00011111 (5-bits)
+  @end
+
+  This gets us the rd, but this only applies to R, I, U and J type formats
+
+  So we have to find what type of instruction this is first and then ditermine that if there is need to find rd or not.
+
+  @table
+  |--------------+--------+------------------------------------------------------|
+  | Opcode (Hex) | Format | Purpose                                              |
+  |--------------+--------+------------------------------------------------------|
+  | 0x33         | R-type | "Math between two registers (Add, Sub, XOR)"         |
+  |--------------+--------+------------------------------------------------------|
+  | 0x13         | I-type | "Math between a register and a constant (Addi, Ori)" |
+  |--------------+--------+------------------------------------------------------|
+  | 0x03         | I-type | Loading data from RAM into a register (LW)           |
+  |--------------+--------+------------------------------------------------------|
+  | 0x23         | S-type | Storing data from a register into RAM (SW)           |
+  |--------------+--------+------------------------------------------------------|
+  | 0x63         | B-type | "Decisions/Branches (If equal, jump)"                |
+  |--------------+--------+------------------------------------------------------|
+  | 0x37         | U-type | Setting large 20-bit numbers (LUI)                   |
+  |--------------+--------+------------------------------------------------------|
+  | 0x6F         | J-type | Jumping to a function (JAL)                          |
+  |--------------+--------+------------------------------------------------------|
+  @end
+
+  The above table defines the instruction division.
+  so if the opcode 0x33 we say the instruction is R-type and needs rd so we find rd too.
+
+  @code
+  FUNCTION decode (instruction):
+  1. EXTRACT opcode (bit 0 to 6);
+
+  2. SWICTH based on opcode:
+
+    CASE 0x33: // R-Type
+      rd = bits 7-11,
+      funct3 = 12-14,
+      rs1 = 15-19,
+      rs2 = 20-24,
+      funct7 = 25-31
+
+    CASE 0x13: // I-type
+      rd = bits 7-11,
+      funct3 = 12-14,
+      rs1 = 15-19,
+      imm = bits 20-31 
+
+    CASE 0x03: // I-Type
+      rd = bits 7-11,
+      funct3 = 12-14,
+      rs1 = 15-19,
+      imm = 20-31
+
+    CASE 0x23: // S-Type
+      imm_low = bits 7-11,
+      funct3 = 12-14,
+      rs1 = 15-19,
+      rs2 = 20-24,
+      imm_high = 25-31
+
+  CASE 0x63: // B-Type
+    scrambled_imm_low = bits 7-11,
+    funct3 = bits 12-14,
+    rs1 = bits 15-19,
+    rs2 = bits 20-24,
+    scrambled_imm_high = bits 25-31
+
+  CASE 0x37: // U-Type
+    rd = bits 7-11,
+    imm = bits 12-31,
+
+  CASE 0x03 (Load) & CASE 0x67 (JALR):
+    rd     = bits 7-11
+    funct3 = bits 12-14
+    rs1    = bits 15-19
+    imm    = bits 20-31 (Sign-Extended)
+  @end

@@ -1,0 +1,68 @@
+@document.meta
+title: 2025-12-31
+description: 
+authors: dfg
+categories: 
+created: 2025-12-31T10:02:50+0530
+updated: 2025-12-31T18:10:25+0530
+version: 1.1.1
+@end
+
+* Goals for Today
+  - Implement the docoding logic.
+
+* Thought dump
+  The struct for the decoded instruction should have the following
+  - opcode ( 7-bits ) -> u8
+  - rd ( 5-bits ) -> u8
+  - rs1 ( 5 bits ) -> u8
+  - rs2 ( 5-bits ) -> u8
+  - funct3 ( 3-bits ) -> u8
+  - funct7 ( 7-bits ) -> u8
+  - imm ( up to 20 bits ) -> i32 ( signed )
+
+  In code it look like this:
+  @code rust
+  pub struct de_inst {
+    opcode: u8,
+    rd: u8,
+    rs1: u8,
+    rs2: u8,
+    funct3: u8,
+    funct7: u8,
+    imm: i32,
+  }
+  @end
+
+  Then we have a cpu::decode funtion that decodes and return the de_inst
+  We need to first extract every thing from the instruction.
+  we then make return an instance of the decoded_inst struct.
+
+  @code rust
+  impl CPU {
+    pub fn decode(&self, inst: u32) -> de_inst {
+      // Extract the opcode
+      let opcode = (inst & 0x7F) as u8;
+
+      // Match for a format
+      match opcode {
+        0x13 => {
+          return decoded_inst {
+            opcode: opcode,
+            rd: ((inst >> 7) & 0x1F) as u8,
+            funct3: ((inst >> 12) & 0x7) as u8,
+            rs1: ((inst >> 15) & 0x1F) as u8, 
+            imm: ((inst as i32)>> 20),
+            // Parts not used
+            rs2: 0x0,
+            funct7: 0x0,
+          }
+        },
+        _ => {},
+      }
+    }
+  }
+  @end
+
+
+  
