@@ -1,0 +1,91 @@
+@document.meta
+title: 2026-01-18
+description: 
+authors: dfg
+categories: 
+created: 2026-01-18T15:53:18+0530
+updated: 2026-01-18T16:46:13+0530
+version: 1.1.1
+@end
+* Thoughts
+  Today I have come back to work on the riscV project.
+  I have already started working on the decoding logic, I have made the decode funtion
+  spit out a DecodeInst struct with all the parts, the parts which are not
+  required by the current format, will be set to 0x0.
+
+  Now I will make the S-type.
+  it has the immidiate diivided in 2 parts, we need to combine these into a singular block of data.
+  it can be done by
+
+  @code rust
+  let low_imm = (inst >> 7) & 0x1F;
+  let high_imm = (inst >> 25) & 0x7F;
+  let imm = (high_imm << 5) | low_imm;
+
+
+  return DecodeInst {
+    imm: ((imm as i32) << 20) >> 20,
+    ..Default::default()
+  }
+  @end
+  
+  Now for the scrambled immidiates.
+  These scrambled immidiates are like jigsaw puzzles.
+
+  For the B-type or the branch instruction, the immidiate is 12 bits,
+  the immidiate is divided into 5 parts,
+  - sign: last bit of inmstruction(bit 31)
+  - The "Hitchhiker": bit 7 of instruction.
+  - High middle: bit 25 to 30
+  - Low Middle: bit 8 to 11
+  - hidden Zero: set the bit 0 of immidiate to 0 manualy
+
+  In code it is represented as follow:
+  @code rust
+  let sign = (inst >> 31) as u16;
+  let hitch_hicker = ((inst >> 7) & 0x1) as u16;
+  let imm_high_mid = ((inst >> 25) & 0x3F) as u16;
+  let imm_low_mid  = ((inst >> 8) & 0xF) as u16;
+  let imm = ((((((sign << 1) | hitch_hicker) << 6) | imm_high_mid) << 4) | imm_low_mid) << 1;
+
+  return DecodeInst {
+    imm: ((imm as i32) << 19) >> 19,
+    ..Default::default()
+  }
+  @end
+
+  this concludes the Branch Instruction decoding.
+
+  Now for the J-type instruction.
+  The immidiate fo the J-type instruction is 20-bits long.
+  It is scrambled too as the B-type immidiate.
+  It goes as follow:
+  - Sign: bit 31 of the Instruction and bit 20 of the immidiate
+  - The "Hitchhicker": bit 20 of the Instruction or bit-11 of the immidiate
+  - High middle: bits 12-19 of both immidiate and instruction.
+  - Low middle: bits 21-30 of instruction or 1-10 of  the immidiate
+  - The hidden Zero: This is also set manualy
+
+  This will be represented in code as follows:
+  @code rust
+  let sign = (inst >> 31) as u32;
+  let hitch_hicker = ((inst >> 20) & 0x1) as u32;
+  let imm_high_mid = ((inst >> 12) & 0xFF) as u32;
+  let imm_low_mid = ((inst >> 21) & 0x3FF) as u32;
+  let imm = ((((((sign << 8) | imm_high_mid) << 1) | hitch_hicker) << 10) | imm_low_mid) << 1;
+
+  return DecodeInst {
+    imm: ((imm as i32) << 11) >> 11,
+    ..Default::default()
+  }
+  @end
+
+  This concludes the Jump and Link type instruction decoding.
+  With this I have completed the decoding funtion and the funtion can Now
+  decode any instructino from the RV32I base instruction set.
+
+  Now We can move to the execution funtion.
+  I have gone ahead and created a exec module in the cpu mod.
+  The very first instruction I will be implementing is the addi
+  this funtion adds the value of source reg and imm and stores in rd
+  
