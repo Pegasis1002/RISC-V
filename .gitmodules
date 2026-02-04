@@ -1,3 +1,6 @@
 [submodule "iron-clad"]
 	path = iron-clad
 	url = git@github.com:Pegasis1002/Iron-clad.git
+[submodule "iron-kernel"]
+	path = iron-kernel
+	url = git@github.com:Pegasis1002/Iron-kernel.git
